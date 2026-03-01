@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-03-01T20:08:41.002Z",
+  "generated_at": "2026-03-01T20:41:38.889Z",
   "no_change_cycle": false,
   "business": {
     "name": "MARZARK Trading Intelligence",
@@ -35,8 +35,8 @@
     },
     {
       "symbol": "IWM",
-      "price": 260.95,
-      "change_pct": -0.10336115151980653,
+      "price": 260.88,
+      "change_pct": -0.1263351326518832,
       "volume": 24911
     }
   ],
