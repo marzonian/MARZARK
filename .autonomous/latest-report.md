@@ -1,6 +1,6 @@
 # Autonomous Business Report
 
-Generated: 2026-03-01T18:31:41.712Z
+Generated: 2026-03-01T18:32:37.179Z
 Business: MARZARK Trading Intelligence
 Offer: Risk-first market brief with premium alert candidates
 Price: $29/month
