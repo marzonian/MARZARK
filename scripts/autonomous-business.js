@@ -311,11 +311,18 @@ async function main() {
   let quotes = [];
 
   if (externalApisAllowed && marketSecretStatus.usable) {
-    quotes = await fetchFmpQuotes(symbols, process.env[marketSecretName]);
-    marketDataStatus = {
-      enabled: true,
-      reason: "Market data feed active via secret-gated provider."
-    };
+    try {
+      quotes = await fetchFmpQuotes(symbols, process.env[marketSecretName]);
+      marketDataStatus = {
+        enabled: true,
+        reason: "Market data feed active via secret-gated provider."
+      };
+    } catch (error) {
+      marketDataStatus = {
+        enabled: false,
+        reason: `Market data provider error: ${error.message || String(error)}`
+      };
+    }
   } else if (!marketSecretStatus.approved) {
     marketDataStatus = {
       enabled: false,
