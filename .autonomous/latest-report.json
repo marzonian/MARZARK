@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-03-01T18:28:35.102Z",
+  "generated_at": "2026-03-01T18:30:17.418Z",
   "no_change_cycle": false,
   "business": {
     "name": "MARZARK Trading Intelligence",
@@ -18,7 +18,7 @@
   "market_data": {
     "provider": "databento",
     "enabled": false,
-    "reason": "Market data provider error: Databento request failed with status 422: {\"detail\":{\"case\":\"symbology_invalid_request\",\"message\":\"Unable to process symbology with parameters: `dataset=DBEQ.BASIC`, `stype_in=raw_symbol`, `stype_out=raw_symbol`. See the symbology docs for supported combinati..."
+    "reason": "Market data provider error: Databento request failed with status 422: {\"detail\":{\"case\":\"data_start_after_available_end\",\"message\":\"`start` in query ('2026-03-01 15:30:16.784000+00:00') was after the available end of dataset DBEQ.BASIC ('2026-02-28 00:00:00+00:00'). Try requesting with ..."
   },
   "quotes": [],
   "signals": [],

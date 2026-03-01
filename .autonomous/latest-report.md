@@ -1,6 +1,6 @@
 # Autonomous Business Report
 
-Generated: 2026-03-01T18:28:35.102Z
+Generated: 2026-03-01T18:30:17.418Z
 Business: MARZARK Trading Intelligence
 Offer: Risk-first market brief with premium alert candidates
 Price: $29/month
@@ -9,7 +9,7 @@ No-change cycle: false
 ## Market Data
 - Provider: databento
 - Enabled: false
-- Reason: Market data provider error: Databento request failed with status 422: {"detail":{"case":"symbology_invalid_request","message":"Unable to process symbology with parameters: `dataset=DBEQ.BASIC`, `stype_in=raw_symbol`, `stype_out=raw_symbol`. See the symbology docs for supported combinati...
+- Reason: Market data provider error: Databento request failed with status 422: {"detail":{"case":"data_start_after_available_end","message":"`start` in query ('2026-03-01 15:30:16.784000+00:00') was after the available end of dataset DBEQ.BASIC ('2026-02-28 00:00:00+00:00'). Try requesting with ...
 - Symbols: SPY, QQQ, IWM, DIA
 - Quotes collected: 0
 
