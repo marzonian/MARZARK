@@ -1,8 +1,8 @@
 # Heartbeat Report
 
-Generated: 2026-03-01T17:36:39.291Z
+Generated: 2026-03-01T18:30:45.416Z
 Tracked paths: heartbeat.md, config.json, skills/
-Relevant commit count: 4
+Relevant commit count: 5
 No-change cycle: false
 
 ## Heartbeat Settings
@@ -10,6 +10,8 @@ No-change cycle: false
 - report_on_no_change: false
 
 ## Recent Memory Changes
+- 7404d34c | 2026-03-01T13:21:37-05:00 | feat: switch autonomous market data provider to Databento
+  files: config.json
 - 0b7866ac | 2026-03-01T12:31:22-05:00 | feat: add Discord webhook delivery for autonomous business updates
   files: config.json
 - 5d66dcfe | 2026-03-01T12:07:29-05:00 | feat: add autonomous trading business runner with scheduled updates and telegram delivery
@@ -29,7 +31,7 @@ No-change cycle: false
 - External API calls: require_secret
 - External API enabled this run: false
 - External API gate reason: No approved secrets are present in environment.
-- Approved secrets: OPENAI_API_KEY, FMP_API_KEY, TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, DISCORD_WEBHOOK_URL
+- Approved secrets: OPENAI_API_KEY, DATABENTO_API_KEY, FMP_API_KEY, TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, DISCORD_WEBHOOK_URL
 - Present approved secrets: none
 - Fallback reasoning: local_ollama_only
 - Reasoning provider: ollama
