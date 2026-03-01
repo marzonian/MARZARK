@@ -23,8 +23,13 @@
   },
   "policy": {
     "allow_external_apis_with_secret_only": true,
-    "market_data_provider": "financialmodelingprep",
-    "market_data_secret": "FMP_API_KEY",
+    "market_data_provider": "databento",
+    "market_data_secret": "DATABENTO_API_KEY",
+    "databento_dataset": "DBEQ.BASIC",
+    "databento_schema": "ohlcv-1m",
+    "databento_lookback_minutes": 180,
+    "databento_stype_in": "raw_symbol",
+    "databento_stype_out": "raw_symbol",
     "telegram_secrets": [
       "TELEGRAM_BOT_TOKEN",
       "TELEGRAM_CHAT_ID"

@@ -47,6 +47,7 @@ jobs:
           AUTO_DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.dry_run || 'false' }}
           AUTO_COMMIT: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.commit_changes || 'true' }}
           AUTO_PUSH: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.push_changes || 'true' }}
+          DATABENTO_API_KEY: ${{ secrets.DATABENTO_API_KEY }}
           FMP_API_KEY: ${{ secrets.FMP_API_KEY }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}

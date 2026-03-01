@@ -61,6 +61,12 @@ function parseNumber(value, fallback) {
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
+function isoMinutesAgo(minutes) {
+  const safeMinutes = Math.max(1, parseNumber(minutes, 120));
+  const date = new Date(Date.now() - (safeMinutes * 60 * 1000));
+  return date.toISOString();
+}
+
 function getSecretStatus(secretName, allowedSecrets) {
   const approved = allowedSecrets.includes(secretName);
   const present = Boolean(process.env[secretName]);
@@ -131,6 +137,155 @@ async function fetchFmpQuotes(symbols, apiKey) {
   };
 }
 
+function parseDatabentoJsonRows(payloadText) {
+  const trimmed = String(payloadText || "").trim();
+  if (!trimmed) {
+    return [];
+  }
+
+  // Databento JSON encoding can be either a JSON value or newline-delimited JSON objects.
+  try {
+    const parsed = JSON.parse(trimmed);
+    if (Array.isArray(parsed)) {
+      return parsed;
+    }
+    if (parsed && typeof parsed === "object") {
+      if (Array.isArray(parsed.data)) {
+        return parsed.data;
+      }
+      return [parsed];
+    }
+  } catch (_error) {
+    // Fall through to NDJSON parsing.
+  }
+
+  return trimmed
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => {
+      try {
+        return JSON.parse(line);
+      } catch (_error) {
+        return null;
+      }
+    })
+    .filter(Boolean);
+}
+
+async function fetchDatabentoQuotes(options) {
+  const {
+    symbols,
+    apiKey,
+    dataset,
+    schema,
+    stypeIn,
+    stypeOut,
+    lookbackMinutes
+  } = options;
+
+  const endpoint = "https://hist.databento.com/v0/timeseries.get_range";
+  const authHeader = Buffer.from(`${apiKey}:`).toString("base64");
+  const body = new URLSearchParams({
+    dataset,
+    schema,
+    symbols: symbols.join(","),
+    stype_in: stypeIn,
+    stype_out: stypeOut,
+    start: isoMinutesAgo(lookbackMinutes),
+    end: new Date().toISOString(),
+    encoding: "json",
+    compression: "none",
+    map_symbols: "true"
+  });
+
+  const response = await fetch(endpoint, {
+    method: "POST",
+    headers: {
+      "Authorization": `Basic ${authHeader}`,
+      "Content-Type": "application/x-www-form-urlencoded",
+      "Accept": "application/json,text/plain"
+    },
+    body
+  });
+
+  const responseText = await response.text();
+  if (!response.ok) {
+    const preview = truncate(responseText, 220);
+    throw new Error(`Databento request failed with status ${response.status}: ${preview}`);
+  }
+
+  const rows = parseDatabentoJsonRows(responseText);
+  const bySymbol = new Map();
+
+  rows.forEach((row) => {
+    if (!row || typeof row !== "object") {
+      return;
+    }
+
+    const symbol = String(
+      row.symbol ||
+      row.raw_symbol ||
+      row.stype_in_symbol ||
+      row.stype_out_symbol ||
+      row.s ||
+      ""
+    );
+
+    if (!symbol || symbol === "NaN") {
+      return;
+    }
+
+    const ts = String(row.ts_event || row.ts_recv || row.ts || "");
+    const open = parseNumber(row.open, null);
+    const close = parseNumber(row.close, null);
+    const last = parseNumber(row.price ?? row.last ?? row.last_price, null);
+    const volume = parseNumber(row.volume ?? row.size ?? 0, 0);
+
+    if (!bySymbol.has(symbol)) {
+      bySymbol.set(symbol, []);
+    }
+
+    bySymbol.get(symbol).push({
+      ts,
+      open: open !== null ? open : close,
+      close: close !== null ? close : open !== null ? open : last,
+      volume
+    });
+  });
+
+  const quotes = [];
+  bySymbol.forEach((records, symbol) => {
+    records.sort((a, b) => String(a.ts).localeCompare(String(b.ts)));
+    const first = records.find((item) => item.open !== null || item.close !== null);
+    const last = [...records].reverse().find((item) => item.close !== null || item.open !== null);
+    if (!first || !last) {
+      return;
+    }
+
+    const startPrice = parseNumber(first.open ?? first.close, null);
+    const endPrice = parseNumber(last.close ?? last.open, null);
+    if (startPrice === null || endPrice === null || startPrice === 0) {
+      return;
+    }
+
+    const totalVolume = records.reduce((acc, item) => acc + parseNumber(item.volume, 0), 0);
+    const changePct = ((endPrice - startPrice) / startPrice) * 100;
+
+    quotes.push({
+      symbol,
+      price: endPrice,
+      change_pct: changePct,
+      volume: totalVolume
+    });
+  });
+
+  return {
+    quotes,
+    errors: []
+  };
+}
+
 function buildSignals(quotes, minMovePct) {
   const signals = [];
   const numericThreshold = Math.abs(parseNumber(minMovePct, 0.5));
@@ -165,7 +320,7 @@ function buildRecommendations(signals, marketDataStatus) {
     notes.push("No high-move signals this cycle. Publish a risk management tip for audience retention.");
     notes.push("Post a watchlist-only update and prepare next cycle triggers.");
   } else {
-    notes.push("Market data feed disabled. Add FMP_API_KEY secret to activate live signal generation.");
+    notes.push("Market data feed disabled. Add the configured provider API secret to activate live signal generation.");
     notes.push("Keep sending cadence updates so subscribers receive consistent communication.");
   }
 
@@ -187,6 +342,7 @@ function toMarkdown(report) {
   lines.push(`No-change cycle: ${report.no_change_cycle}`);
   lines.push("");
   lines.push("## Market Data");
+  lines.push(`- Provider: ${report.market_data.provider}`);
   lines.push(`- Enabled: ${report.market_data.enabled}`);
   lines.push(`- Reason: ${report.market_data.reason}`);
   lines.push(`- Symbols: ${report.trading.symbols.join(", ")}`);
@@ -310,7 +466,16 @@ async function main() {
   const maxTelegramChars = Math.max(300, parseNumber(localConfig?.updates?.max_telegram_chars, 3500));
   const maxDiscordChars = Math.max(300, parseNumber(localConfig?.updates?.max_discord_chars, 1800));
 
-  const marketSecretName = String(localConfig?.policy?.market_data_secret || "FMP_API_KEY");
+  const marketProvider = String(localConfig?.policy?.market_data_provider || "databento").toLowerCase();
+  const marketSecretName = String(
+    localConfig?.policy?.market_data_secret || (marketProvider === "databento" ? "DATABENTO_API_KEY" : "FMP_API_KEY")
+  );
+  const databentoDataset = String(localConfig?.policy?.databento_dataset || "DBEQ.BASIC");
+  const databentoSchema = String(localConfig?.policy?.databento_schema || "ohlcv-1m");
+  const databentoLookbackMinutes = parseNumber(localConfig?.policy?.databento_lookback_minutes, 180);
+  const databentoStypeIn = String(localConfig?.policy?.databento_stype_in || "raw_symbol");
+  const databentoStypeOut = String(localConfig?.policy?.databento_stype_out || "raw_symbol");
+
   const telegramSecrets = Array.isArray(localConfig?.policy?.telegram_secrets)
     ? localConfig.policy.telegram_secrets
     : ["TELEGRAM_BOT_TOKEN", "TELEGRAM_CHAT_ID"];
@@ -321,6 +486,7 @@ async function main() {
   const externalApisAllowed = policyAllowsExternalApi(globalConfig, approvedSecretPresent);
 
   let marketDataStatus = {
+    provider: marketProvider,
     enabled: false,
     reason: "Market data disabled by policy or missing approved secret."
   };
@@ -328,10 +494,27 @@ async function main() {
 
   if (externalApisAllowed && marketSecretStatus.usable) {
     try {
-      const fetched = await fetchFmpQuotes(symbols, process.env[marketSecretName]);
+      let fetched;
+      if (marketProvider === "databento") {
+        fetched = await fetchDatabentoQuotes({
+          symbols,
+          apiKey: process.env[marketSecretName],
+          dataset: databentoDataset,
+          schema: databentoSchema,
+          stypeIn: databentoStypeIn,
+          stypeOut: databentoStypeOut,
+          lookbackMinutes: databentoLookbackMinutes
+        });
+      } else if (marketProvider === "financialmodelingprep" || marketProvider === "fmp") {
+        fetched = await fetchFmpQuotes(symbols, process.env[marketSecretName]);
+      } else {
+        throw new Error(`Unsupported market data provider '${marketProvider}'`);
+      }
+
       quotes = fetched.quotes;
       if (quotes.length > 0) {
         marketDataStatus = {
+          provider: marketProvider,
           enabled: true,
           reason: fetched.errors.length > 0
             ? `Market data active with partial errors: ${fetched.errors.join("; ")}`
@@ -339,6 +522,7 @@ async function main() {
         };
       } else {
         marketDataStatus = {
+          provider: marketProvider,
           enabled: false,
           reason: fetched.errors.length > 0
             ? `Market data provider error: ${fetched.errors.join("; ")}`
@@ -347,22 +531,26 @@ async function main() {
       }
     } catch (error) {
       marketDataStatus = {
+        provider: marketProvider,
         enabled: false,
         reason: `Market data provider error: ${error.message || String(error)}`
       };
     }
   } else if (!marketSecretStatus.approved) {
     marketDataStatus = {
+      provider: marketProvider,
       enabled: false,
       reason: `${marketSecretName} is not allowlisted in config.json policy.allowed_secrets.`
     };
   } else if (!marketSecretStatus.present) {
     marketDataStatus = {
+      provider: marketProvider,
       enabled: false,
       reason: `${marketSecretName} secret is missing.`
     };
   } else if (!externalApisAllowed) {
     marketDataStatus = {
+      provider: marketProvider,
       enabled: false,
       reason: "External API access is blocked by global policy."
     };
@@ -384,7 +572,11 @@ async function main() {
       max_telegram_chars: maxTelegramChars,
       max_discord_chars: maxDiscordChars,
       telegram_secret_names: telegramSecrets,
-      discord_secret_name: discordSecretName
+      discord_secret_name: discordSecretName,
+      market_data_provider: marketProvider,
+      market_data_secret: marketSecretName,
+      databento_dataset: databentoDataset,
+      databento_schema: databentoSchema
     },
     delivery_ready: {
       external_apis_allowed: externalApisAllowed,

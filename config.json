@@ -40,6 +40,7 @@
     "fallback_reasoning": "local_ollama_only",
     "allowed_secrets": [
       "OPENAI_API_KEY",
+      "DATABENTO_API_KEY",
       "FMP_API_KEY",
       "TELEGRAM_BOT_TOKEN",
       "TELEGRAM_CHAT_ID",

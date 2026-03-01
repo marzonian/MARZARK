@@ -15,7 +15,7 @@ This repository runs two independent autonomous loops:
 
 Add these in `GitHub -> Settings -> Secrets and variables -> Actions`:
 
-- `FMP_API_KEY` (market quote feed)
+- `DATABENTO_API_KEY` (market quote feed)
 - `DISCORD_WEBHOOK_URL` (recommended update channel)
 - `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` (optional secondary channel)
 
