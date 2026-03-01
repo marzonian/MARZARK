@@ -335,6 +335,11 @@ async function main() {
 
   const signals = buildSignals(quotes, minMovePct);
   const recommendations = buildRecommendations(signals, marketDataStatus);
+  const telegramTokenStatus = getSecretStatus(telegramSecrets[0], allowedSecrets);
+  const telegramChatStatus = getSecretStatus(telegramSecrets[1], allowedSecrets);
+  const telegramConfigured = externalApisAllowed && telegramTokenStatus.usable && telegramChatStatus.usable;
+  const discordSecretStatus = getSecretStatus(discordSecretName, allowedSecrets);
+  const discordConfigured = externalApisAllowed && discordSecretStatus.usable;
 
   const fingerprintPayload = {
     business: localConfig.business || {},
@@ -345,6 +350,11 @@ async function main() {
       max_discord_chars: maxDiscordChars,
       telegram_secret_names: telegramSecrets,
       discord_secret_name: discordSecretName
+    },
+    delivery_ready: {
+      external_apis_allowed: externalApisAllowed,
+      telegram_configured: telegramConfigured,
+      discord_configured: discordConfigured
     },
     market_data_enabled: marketDataStatus.enabled,
     market_data_reason: marketDataStatus.reason,
@@ -368,12 +378,6 @@ async function main() {
     console.log("Autonomous: no meaningful change detected; skipping report/update cycle.");
     return;
   }
-
-  const telegramTokenStatus = getSecretStatus(telegramSecrets[0], allowedSecrets);
-  const telegramChatStatus = getSecretStatus(telegramSecrets[1], allowedSecrets);
-  const telegramConfigured = externalApisAllowed && telegramTokenStatus.usable && telegramChatStatus.usable;
-  const discordSecretStatus = getSecretStatus(discordSecretName, allowedSecrets);
-  const discordConfigured = externalApisAllowed && discordSecretStatus.usable;
 
   const report = {
     generated_at: new Date().toISOString(),
