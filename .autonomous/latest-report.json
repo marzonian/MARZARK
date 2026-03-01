@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-03-01T18:13:33.120Z",
+  "generated_at": "2026-03-01T18:28:35.102Z",
   "no_change_cycle": false,
   "business": {
     "name": "MARZARK Trading Intelligence",
@@ -16,26 +16,21 @@
     "min_price_move_pct_alert": 0.5
   },
   "market_data": {
-    "enabled": true,
-    "reason": "Market data active with partial errors: FMP QQQ: HTTP 402; FMP IWM: HTTP 402; FMP DIA: HTTP 402"
+    "provider": "databento",
+    "enabled": false,
+    "reason": "Market data provider error: Databento request failed with status 422: {\"detail\":{\"case\":\"symbology_invalid_request\",\"message\":\"Unable to process symbology with parameters: `dataset=DBEQ.BASIC`, `stype_in=raw_symbol`, `stype_out=raw_symbol`. See the symbology docs for supported combinati..."
   },
-  "quotes": [
-    {
-      "symbol": "SPY",
-      "price": 685.99,
-      "change_pct": null,
-      "volume": 71529246
-    }
-  ],
+  "quotes": [],
   "signals": [],
   "recommendations": [
-    "No high-move signals this cycle. Publish a risk management tip for audience retention.",
-    "Post a watchlist-only update and prepare next cycle triggers."
+    "Market data feed disabled. Add the configured provider API secret to activate live signal generation.",
+    "Keep sending cadence updates so subscribers receive consistent communication."
   ],
   "policy": {
     "external_api_policy": "require_secret",
     "allowed_secrets": [
       "OPENAI_API_KEY",
+      "DATABENTO_API_KEY",
       "FMP_API_KEY",
       "TELEGRAM_BOT_TOKEN",
       "TELEGRAM_CHAT_ID",
