@@ -61,6 +61,18 @@ function parseNumber(value, fallback) {
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
+function normalizePrice(value) {
+  const numeric = parseNumber(value, null);
+  if (numeric === null) {
+    return null;
+  }
+  // Databento OHLCV prices may be integer nanodollars on some datasets/schemas.
+  if (Math.abs(numeric) >= 1_000_000) {
+    return numeric / 1_000_000_000;
+  }
+  return numeric;
+}
+
 function isoMinutesAgo(minutes) {
   const safeMinutes = Math.max(1, parseNumber(minutes, 120));
   const date = new Date(Date.now() - (safeMinutes * 60 * 1000));
@@ -339,9 +351,9 @@ async function fetchDatabentoQuotes(options) {
     }
 
     const ts = String(row.ts_event || row.ts_recv || row.ts || "");
-    const open = parseNumber(row.open, null);
-    const close = parseNumber(row.close, null);
-    const last = parseNumber(row.price ?? row.last ?? row.last_price, null);
+    const open = normalizePrice(row.open);
+    const close = normalizePrice(row.close);
+    const last = normalizePrice(row.price ?? row.last ?? row.last_price);
     const volume = parseNumber(row.volume ?? row.size ?? 0, 0);
 
     if (!bySymbol.has(symbol)) {
