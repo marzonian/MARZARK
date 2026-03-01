@@ -88,31 +88,36 @@ function policyAllowsExternalApi(globalConfig, approvedSecretPresent) {
 }
 
 async function fetchFmpQuotes(symbols, apiKey) {
-  const endpoint = `https://financialmodelingprep.com/api/v3/quote/${symbols.join(",")}?apikey=${encodeURIComponent(apiKey)}`;
-  const response = await fetch(endpoint, {
-    method: "GET",
-    headers: {
-      "Accept": "application/json"
-    }
-  });
+  const quoteResults = await Promise.all(
+    symbols.map(async (symbol) => {
+      const endpoint = `https://financialmodelingprep.com/stable/quote?symbol=${encodeURIComponent(symbol)}&apikey=${encodeURIComponent(apiKey)}`;
+      const response = await fetch(endpoint, {
+        method: "GET",
+        headers: {
+          "Accept": "application/json"
+        }
+      });
 
-  if (!response.ok) {
-    throw new Error(`FMP API request failed with status ${response.status}`);
-  }
+      if (!response.ok) {
+        throw new Error(`FMP API request failed for ${symbol} with status ${response.status}`);
+      }
 
-  const payload = await response.json();
-  if (!Array.isArray(payload)) {
-    throw new Error("FMP API payload is not an array.");
-  }
+      const payload = await response.json();
+      const row = Array.isArray(payload) ? payload[0] : payload;
+      if (!row || typeof row !== "object") {
+        return null;
+      }
 
-  return payload
-    .map((item) => ({
-      symbol: String(item.symbol || ""),
-      price: parseNumber(item.price, null),
-      change_pct: parseNumber(item.changesPercentage, null),
-      volume: parseNumber(item.volume, null)
-    }))
-    .filter((item) => item.symbol);
+      return {
+        symbol: String(row.symbol || symbol),
+        price: parseNumber(row.price ?? row.lastSalePrice, null),
+        change_pct: parseNumber(row.changesPercentage ?? row.changePercent ?? row.change_percentage, null),
+        volume: parseNumber(row.volume ?? row.avgVolume, null)
+      };
+    })
+  );
+
+  return quoteResults.filter((item) => item && item.symbol);
 }
 
 function buildSignals(quotes, minMovePct) {
