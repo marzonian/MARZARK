@@ -1,0 +1,53 @@
+name: Autonomous Business
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Run without commit/push/Telegram send"
+        required: false
+        default: false
+        type: boolean
+      commit_changes:
+        description: "Commit report updates"
+        required: false
+        default: true
+        type: boolean
+      push_changes:
+        description: "Push report commits"
+        required: false
+        default: true
+        type: boolean
+
+permissions:
+  contents: write
+
+concurrency:
+  group: autonomous-business-runner
+  cancel-in-progress: false
+
+jobs:
+  autonomous-business:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Execute autonomous business runner
+        env:
+          AUTO_DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.dry_run || 'false' }}
+          AUTO_COMMIT: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.commit_changes || 'true' }}
+          AUTO_PUSH: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.push_changes || 'true' }}
+          FMP_API_KEY: ${{ secrets.FMP_API_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: node scripts/autonomous-business.js

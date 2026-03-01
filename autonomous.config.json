@@ -1,0 +1,32 @@
+{
+  "business": {
+    "name": "MARZARK Trading Intelligence",
+    "offer": "Risk-first market brief with premium alert candidates",
+    "price_usd_monthly": 29
+  },
+  "schedule": {
+    "cron": "*/30 * * * *"
+  },
+  "trading": {
+    "symbols": [
+      "SPY",
+      "QQQ",
+      "IWM",
+      "DIA"
+    ],
+    "min_price_move_pct_alert": 0.5
+  },
+  "updates": {
+    "send_on_no_change": false,
+    "max_telegram_chars": 3500
+  },
+  "policy": {
+    "allow_external_apis_with_secret_only": true,
+    "market_data_provider": "financialmodelingprep",
+    "market_data_secret": "FMP_API_KEY",
+    "telegram_secrets": [
+      "TELEGRAM_BOT_TOKEN",
+      "TELEGRAM_CHAT_ID"
+    ]
+  }
+}

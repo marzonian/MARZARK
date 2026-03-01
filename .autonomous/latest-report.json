@@ -1,0 +1,45 @@
+{
+  "generated_at": "2026-03-01T17:06:27.549Z",
+  "no_change_cycle": false,
+  "business": {
+    "name": "MARZARK Trading Intelligence",
+    "offer": "Risk-first market brief with premium alert candidates",
+    "price_usd_monthly": 29
+  },
+  "trading": {
+    "symbols": [
+      "SPY",
+      "QQQ",
+      "IWM",
+      "DIA"
+    ],
+    "min_price_move_pct_alert": 0.5
+  },
+  "market_data": {
+    "enabled": false,
+    "reason": "FMP_API_KEY secret is missing."
+  },
+  "quotes": [],
+  "signals": [],
+  "recommendations": [
+    "Market data feed disabled. Add FMP_API_KEY secret to activate live signal generation.",
+    "Keep sending cadence updates so subscribers receive consistent communication."
+  ],
+  "policy": {
+    "external_api_policy": "require_secret",
+    "allowed_secrets": [
+      "OPENAI_API_KEY",
+      "FMP_API_KEY",
+      "TELEGRAM_BOT_TOKEN",
+      "TELEGRAM_CHAT_ID"
+    ],
+    "approved_secret_present": false
+  },
+  "telegram": {
+    "configured": false,
+    "attempted": false,
+    "sent": false,
+    "reason": "Telegram disabled: missing allowlisted or present secrets."
+  },
+  "dry_run": true
+}
