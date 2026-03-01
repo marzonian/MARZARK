@@ -216,6 +216,34 @@ function pickDatabentoSymbol(row, symbolByInstrumentId) {
   return "";
 }
 
+function parseDatabentoErrorInfo(payloadText) {
+  const fallback = {
+    case: "",
+    message: truncate(String(payloadText || ""), 240),
+    availableEndIso: null
+  };
+
+  try {
+    const parsed = JSON.parse(String(payloadText || "{}"));
+    const detail = parsed && typeof parsed === "object" ? parsed.detail : null;
+    const detailObj = detail && typeof detail === "object" ? detail : {};
+    const detailMessage = String(detailObj.message || fallback.message);
+    const errorCase = String(detailObj.case || "");
+
+    const match = detailMessage.match(/available end of dataset [^']+ \('([^']+)'\)/i);
+    const availableEndRaw = match ? String(match[1]) : "";
+    const availableEndIso = availableEndRaw ? availableEndRaw.replace(" ", "T") : null;
+
+    return {
+      case: errorCase,
+      message: detailMessage,
+      availableEndIso
+    };
+  } catch (_error) {
+    return fallback;
+  }
+}
+
 async function fetchDatabentoQuotes(options) {
   const {
     symbols,
@@ -229,20 +257,20 @@ async function fetchDatabentoQuotes(options) {
 
   const endpoint = "https://hist.databento.com/v0/timeseries.get_range";
   const authHeader = Buffer.from(`${apiKey}:`).toString("base64");
-  const buildBody = (stypeOutValue) => new URLSearchParams({
+  const buildBody = (stypeOutValue, startIso, endIso) => new URLSearchParams({
     dataset,
     schema,
     symbols: symbols.join(","),
     stype_in: stypeIn,
     stype_out: stypeOutValue,
-    start: isoMinutesAgo(lookbackMinutes),
-    end: new Date().toISOString(),
+    start: startIso,
+    end: endIso,
     encoding: "json",
     compression: "none",
     map_symbols: "true"
   });
 
-  async function requestRange(stypeOutValue) {
+  async function requestRange(stypeOutValue, startIso, endIso) {
     const response = await fetch(endpoint, {
       method: "POST",
       headers: {
@@ -250,25 +278,50 @@ async function fetchDatabentoQuotes(options) {
         "Content-Type": "application/x-www-form-urlencoded",
         "Accept": "application/json,text/plain"
       },
-      body: buildBody(stypeOutValue)
+      body: buildBody(stypeOutValue, startIso, endIso)
     });
     const responseText = await response.text();
-    return { response, responseText, stypeOutValue };
+    return { response, responseText, stypeOutValue, startIso, endIso };
   }
 
-  let requestResult = await requestRange(stypeOut);
-  if (
-    !requestResult.response.ok &&
-    requestResult.response.status === 422 &&
-    String(requestResult.responseText).includes("symbology_invalid_request") &&
-    stypeOut !== "instrument_id"
-  ) {
-    requestResult = await requestRange("instrument_id");
+  let requestStypeOut = stypeOut;
+  let requestStartIso = isoMinutesAgo(lookbackMinutes);
+  let requestEndIso = new Date().toISOString();
+  let requestResult = await requestRange(requestStypeOut, requestStartIso, requestEndIso);
+
+  for (let attempt = 0; attempt < 3 && !requestResult.response.ok; attempt += 1) {
+    const errorInfo = parseDatabentoErrorInfo(requestResult.responseText);
+
+    if (
+      requestResult.response.status === 422 &&
+      errorInfo.case === "symbology_invalid_request" &&
+      requestStypeOut !== "instrument_id"
+    ) {
+      requestStypeOut = "instrument_id";
+      requestResult = await requestRange(requestStypeOut, requestStartIso, requestEndIso);
+      continue;
+    }
+
+    if (
+      requestResult.response.status === 422 &&
+      errorInfo.case === "data_start_after_available_end" &&
+      errorInfo.availableEndIso
+    ) {
+      const availableEnd = new Date(errorInfo.availableEndIso);
+      if (!Number.isNaN(availableEnd.getTime())) {
+        requestEndIso = availableEnd.toISOString();
+        requestStartIso = new Date(availableEnd.getTime() - (Math.max(1, parseNumber(lookbackMinutes, 180)) * 60 * 1000)).toISOString();
+        requestResult = await requestRange(requestStypeOut, requestStartIso, requestEndIso);
+        continue;
+      }
+    }
+
+    break;
   }
 
   if (!requestResult.response.ok) {
-    const preview = truncate(requestResult.responseText, 220);
-    throw new Error(`Databento request failed with status ${requestResult.response.status}: ${preview}`);
+    const errorInfo = parseDatabentoErrorInfo(requestResult.responseText);
+    throw new Error(`Databento request failed with status ${requestResult.response.status}: ${errorInfo.message}`);
   }
 
   const rows = parseDatabentoJsonRows(requestResult.responseText);
