@@ -1,6 +1,6 @@
 # Autonomous Business Report
 
-Generated: 2026-03-01T17:30:54.001Z
+Generated: 2026-03-01T17:39:03.734Z
 Business: MARZARK Trading Intelligence
 Offer: Risk-first market brief with premium alert candidates
 Price: $29/month
@@ -24,9 +24,9 @@ No-change cycle: false
 - Telegram attempted: false
 - Telegram sent: false
 - Telegram reason: Telegram disabled: missing allowlisted or present secrets.
-- Discord configured: false
-- Discord attempted: false
-- Discord sent: false
-- Discord reason: Discord disabled: missing allowlisted or present secret.
+- Discord configured: true
+- Discord attempted: true
+- Discord sent: true
+- Discord reason: Discord message sent successfully.
 
-- Dry run: true
+- Dry run: false
