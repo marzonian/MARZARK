@@ -1,10 +1,10 @@
 # Autonomous Business Report
 
-Generated: 2026-03-01T22:08:10.891Z
+Generated: 2026-03-01T22:41:22.607Z
 Business: MARZARK Trading Intelligence
 Offer: Risk-first market brief with premium alert candidates
 Price: $29/month
-No-change cycle: true
+No-change cycle: false
 
 ## Market Data
 - Provider: databento
@@ -42,8 +42,8 @@ No-change cycle: true
 - Telegram sent: false
 - Telegram reason: Telegram disabled: missing allowlisted or present secrets.
 - Discord configured: true
-- Discord attempted: false
-- Discord sent: false
-- Discord reason: No meaningful change; Discord send skipped.
+- Discord attempted: true
+- Discord sent: true
+- Discord reason: Discord message sent successfully.
 
 - Dry run: false

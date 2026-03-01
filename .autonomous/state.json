@@ -1,6 +1,6 @@
 {
-  "fingerprint": "7dcd3c5a351666c713177e041d7e84094993e1db0beac8f9e5a1fa5df3efb73e",
-  "last_reported_at": "2026-03-01T22:08:10.891Z",
+  "fingerprint": "4b052a0688813d20c7b3956bd739605eb5ce5de3db43c45d4d9f6d2f64643247",
+  "last_reported_at": "2026-03-01T22:41:22.607Z",
   "history": [
     {
       "generated_at": "2026-03-01T21:56:49.772Z",
@@ -9,6 +9,11 @@
     },
     {
       "generated_at": "2026-03-01T22:08:10.891Z",
+      "market_data_enabled": true,
+      "signals": []
+    },
+    {
+      "generated_at": "2026-03-01T22:41:22.607Z",
       "market_data_enabled": true,
       "signals": []
     }
@@ -20,6 +25,6 @@
   },
   "last_telegram_sent": false,
   "last_telegram_reason": "Telegram disabled: missing allowlisted or present secrets.",
-  "last_discord_sent": false,
-  "last_discord_reason": "No meaningful change; Discord send skipped."
+  "last_discord_sent": true,
+  "last_discord_reason": "Discord message sent successfully."
 }

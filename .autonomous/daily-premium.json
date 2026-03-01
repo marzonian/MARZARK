@@ -1,10 +1,10 @@
 {
   "window_type": "daily",
   "window_key": "2026-03-01",
-  "generated_at": "2026-03-01T22:08:10.891Z",
-  "cycles_total": 2,
+  "generated_at": "2026-03-01T22:41:22.607Z",
+  "cycles_total": 3,
   "cycles_with_signals": 0,
-  "market_enabled_cycles": 2,
+  "market_enabled_cycles": 3,
   "signal_hit_rate_pct": 0,
   "top_symbols": [],
   "strongest_signal": null,

@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-03-01T22:08:10.891Z",
-  "no_change_cycle": true,
+  "generated_at": "2026-03-01T22:41:22.607Z",
+  "no_change_cycle": false,
   "business": {
     "name": "MARZARK Trading Intelligence",
     "offer": "Risk-first market brief with premium alert candidates",
@@ -30,20 +30,20 @@
   },
   "quotes": [
     {
-      "symbol": "SPY",
-      "price": 684.27,
-      "change_pct": -0.20417985328218782,
-      "volume": 11688,
-      "as_of": "2026-02-28T00:00:00.000Z",
-      "bars_count": 25
-    },
-    {
       "symbol": "QQQ",
       "price": 606.45,
       "change_pct": -0.172839506172832,
       "volume": 372784,
       "as_of": "2026-02-28T00:00:00.000Z",
       "bars_count": 34
+    },
+    {
+      "symbol": "SPY",
+      "price": 684.27,
+      "change_pct": -0.20417985328218782,
+      "volume": 11688,
+      "as_of": "2026-02-28T00:00:00.000Z",
+      "bars_count": 25
     },
     {
       "symbol": "IWM",
@@ -78,11 +78,11 @@
     },
     "filtered_examples": [
       {
-        "symbol": "SPY",
+        "symbol": "QQQ",
         "reason": "under_min_move"
       },
       {
-        "symbol": "QQQ",
+        "symbol": "SPY",
         "reason": "under_min_move"
       },
       {
@@ -115,19 +115,19 @@
   },
   "discord": {
     "configured": true,
-    "attempted": false,
-    "sent": false,
-    "reason": "No meaningful change; Discord send skipped."
+    "attempted": true,
+    "sent": true,
+    "reason": "Discord message sent successfully."
   },
   "dry_run": false,
   "premium": {
     "daily": {
       "window_type": "daily",
       "window_key": "2026-03-01",
-      "generated_at": "2026-03-01T22:08:10.891Z",
-      "cycles_total": 2,
+      "generated_at": "2026-03-01T22:41:22.607Z",
+      "cycles_total": 3,
       "cycles_with_signals": 0,
-      "market_enabled_cycles": 2,
+      "market_enabled_cycles": 3,
       "signal_hit_rate_pct": 0,
       "top_symbols": [],
       "strongest_signal": null,
@@ -136,15 +136,15 @@
     "weekly": {
       "window_type": "weekly",
       "window_key": "2026-W09",
-      "generated_at": "2026-03-01T22:08:10.891Z",
-      "cycles_total": 2,
+      "generated_at": "2026-03-01T22:41:22.607Z",
+      "cycles_total": 3,
       "cycles_with_signals": 0,
-      "market_enabled_cycles": 2,
+      "market_enabled_cycles": 3,
       "signal_hit_rate_pct": 0,
       "top_symbols": [],
       "strongest_signal": null,
       "latest_signal_cycle": null
     },
-    "history_entries": 2
+    "history_entries": 3
   }
 }
