@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-03-01T19:09:46.120Z",
+  "generated_at": "2026-03-01T20:08:41.002Z",
   "no_change_cycle": false,
   "business": {
     "name": "MARZARK Trading Intelligence",
@@ -22,21 +22,21 @@
   },
   "quotes": [
     {
-      "symbol": "QQQ",
-      "price": 606.45,
-      "change_pct": -0.172839506172832,
-      "volume": 372784
-    },
-    {
       "symbol": "SPY",
       "price": 684.27,
       "change_pct": -0.20417985328218782,
       "volume": 11688
     },
     {
+      "symbol": "QQQ",
+      "price": 606.45,
+      "change_pct": -0.172839506172832,
+      "volume": 372784
+    },
+    {
       "symbol": "IWM",
-      "price": 260.88,
-      "change_pct": -0.1263351326518832,
+      "price": 260.95,
+      "change_pct": -0.10336115151980653,
       "volume": 24911
     }
   ],
