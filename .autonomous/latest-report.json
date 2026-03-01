@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-03-01T18:30:17.418Z",
+  "generated_at": "2026-03-01T18:31:41.712Z",
   "no_change_cycle": false,
   "business": {
     "name": "MARZARK Trading Intelligence",
@@ -17,14 +17,33 @@
   },
   "market_data": {
     "provider": "databento",
-    "enabled": false,
-    "reason": "Market data provider error: Databento request failed with status 422: {\"detail\":{\"case\":\"data_start_after_available_end\",\"message\":\"`start` in query ('2026-03-01 15:30:16.784000+00:00') was after the available end of dataset DBEQ.BASIC ('2026-02-28 00:00:00+00:00'). Try requesting with ..."
+    "enabled": true,
+    "reason": "Market data feed active via secret-gated provider."
   },
-  "quotes": [],
+  "quotes": [
+    {
+      "symbol": "SPY",
+      "price": 684270000000,
+      "change_pct": -0.20417985328219113,
+      "volume": 11688
+    },
+    {
+      "symbol": "QQQ",
+      "price": 606450000000,
+      "change_pct": -0.17283950617283952,
+      "volume": 372784
+    },
+    {
+      "symbol": "IWM",
+      "price": 260880000000,
+      "change_pct": -0.12633513265188928,
+      "volume": 24911
+    }
+  ],
   "signals": [],
   "recommendations": [
-    "Market data feed disabled. Add the configured provider API secret to activate live signal generation.",
-    "Keep sending cadence updates so subscribers receive consistent communication."
+    "No high-move signals this cycle. Publish a risk management tip for audience retention.",
+    "Post a watchlist-only update and prepare next cycle triggers."
   ],
   "policy": {
     "external_api_policy": "require_secret",
