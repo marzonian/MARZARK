@@ -1,12 +1,20 @@
 {
-  "generated_at": "2026-03-01T17:09:34.518Z",
+  "generated_at": "2026-03-01T17:36:39.291Z",
   "tracked_paths": [
     "heartbeat.md",
     "config.json",
     "skills/"
   ],
-  "relevant_commit_count": 3,
+  "relevant_commit_count": 4,
   "recent_commits": [
+    {
+      "hash": "0b7866ac29c9f5dd03df459f4f2d7dbb908b045f",
+      "date": "2026-03-01T12:31:22-05:00",
+      "subject": "feat: add Discord webhook delivery for autonomous business updates",
+      "files": [
+        "config.json"
+      ]
+    },
     {
       "hash": "5d66dcfe6e6aa325fdbf680d62016308b7d3f5d6",
       "date": "2026-03-01T12:07:29-05:00",
@@ -55,7 +63,8 @@
       "OPENAI_API_KEY",
       "FMP_API_KEY",
       "TELEGRAM_BOT_TOKEN",
-      "TELEGRAM_CHAT_ID"
+      "TELEGRAM_CHAT_ID",
+      "DISCORD_WEBHOOK_URL"
     ],
     "present_allowed_secrets": [],
     "external_api_enabled": false,
