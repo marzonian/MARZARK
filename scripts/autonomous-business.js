@@ -88,36 +88,47 @@ function policyAllowsExternalApi(globalConfig, approvedSecretPresent) {
 }
 
 async function fetchFmpQuotes(symbols, apiKey) {
+  const errors = [];
   const quoteResults = await Promise.all(
     symbols.map(async (symbol) => {
-      const endpoint = `https://financialmodelingprep.com/stable/quote?symbol=${encodeURIComponent(symbol)}&apikey=${encodeURIComponent(apiKey)}`;
-      const response = await fetch(endpoint, {
-        method: "GET",
-        headers: {
-          "Accept": "application/json"
+      try {
+        const endpoint = `https://financialmodelingprep.com/stable/quote?symbol=${encodeURIComponent(symbol)}&apikey=${encodeURIComponent(apiKey)}`;
+        const response = await fetch(endpoint, {
+          method: "GET",
+          headers: {
+            "Accept": "application/json"
+          }
+        });
+
+        if (!response.ok) {
+          errors.push(`FMP ${symbol}: HTTP ${response.status}`);
+          return null;
         }
-      });
 
-      if (!response.ok) {
-        throw new Error(`FMP API request failed for ${symbol} with status ${response.status}`);
-      }
+        const payload = await response.json();
+        const row = Array.isArray(payload) ? payload[0] : payload;
+        if (!row || typeof row !== "object") {
+          errors.push(`FMP ${symbol}: empty payload`);
+          return null;
+        }
 
-      const payload = await response.json();
-      const row = Array.isArray(payload) ? payload[0] : payload;
-      if (!row || typeof row !== "object") {
+        return {
+          symbol: String(row.symbol || symbol),
+          price: parseNumber(row.price ?? row.lastSalePrice, null),
+          change_pct: parseNumber(row.changesPercentage ?? row.changePercent ?? row.change_percentage, null),
+          volume: parseNumber(row.volume ?? row.avgVolume, null)
+        };
+      } catch (error) {
+        errors.push(`FMP ${symbol}: ${error.message || String(error)}`);
         return null;
       }
-
-      return {
-        symbol: String(row.symbol || symbol),
-        price: parseNumber(row.price ?? row.lastSalePrice, null),
-        change_pct: parseNumber(row.changesPercentage ?? row.changePercent ?? row.change_percentage, null),
-        volume: parseNumber(row.volume ?? row.avgVolume, null)
-      };
     })
   );
 
-  return quoteResults.filter((item) => item && item.symbol);
+  return {
+    quotes: quoteResults.filter((item) => item && item.symbol),
+    errors
+  };
 }
 
 function buildSignals(quotes, minMovePct) {
@@ -317,11 +328,23 @@ async function main() {
 
   if (externalApisAllowed && marketSecretStatus.usable) {
     try {
-      quotes = await fetchFmpQuotes(symbols, process.env[marketSecretName]);
-      marketDataStatus = {
-        enabled: true,
-        reason: "Market data feed active via secret-gated provider."
-      };
+      const fetched = await fetchFmpQuotes(symbols, process.env[marketSecretName]);
+      quotes = fetched.quotes;
+      if (quotes.length > 0) {
+        marketDataStatus = {
+          enabled: true,
+          reason: fetched.errors.length > 0
+            ? `Market data active with partial errors: ${fetched.errors.join("; ")}`
+            : "Market data feed active via secret-gated provider."
+        };
+      } else {
+        marketDataStatus = {
+          enabled: false,
+          reason: fetched.errors.length > 0
+            ? `Market data provider error: ${fetched.errors.join("; ")}`
+            : "Market data provider returned no quotes."
+        };
+      }
     } catch (error) {
       marketDataStatus = {
         enabled: false,
