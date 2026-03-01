@@ -1,12 +1,20 @@
 {
-  "generated_at": "2026-03-01T11:53:02.144Z",
+  "generated_at": "2026-03-01T17:09:34.518Z",
   "tracked_paths": [
     "heartbeat.md",
     "config.json",
     "skills/"
   ],
-  "relevant_commit_count": 2,
+  "relevant_commit_count": 3,
   "recent_commits": [
+    {
+      "hash": "5d66dcfe6e6aa325fdbf680d62016308b7d3f5d6",
+      "date": "2026-03-01T12:07:29-05:00",
+      "subject": "feat: add autonomous trading business runner with scheduled updates and telegram delivery",
+      "files": [
+        "config.json"
+      ]
+    },
     {
       "hash": "34e67e10c0f00fffe018eea37d801a0166961481",
       "date": "2026-03-01T06:52:38-05:00",
@@ -44,7 +52,10 @@
     "default_without_secret": "deny",
     "fallback_reasoning": "local_ollama_only",
     "allowed_secrets": [
-      "OPENAI_API_KEY"
+      "OPENAI_API_KEY",
+      "FMP_API_KEY",
+      "TELEGRAM_BOT_TOKEN",
+      "TELEGRAM_CHAT_ID"
     ],
     "present_allowed_secrets": [],
     "external_api_enabled": false,
@@ -53,5 +64,5 @@
   "runtime": {
     "reasoning_provider": "ollama"
   },
-  "dry_run": true
+  "dry_run": false
 }
