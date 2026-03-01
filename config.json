@@ -4,7 +4,8 @@
     "mode": "autonomous",
     "transport": [
       "web-chat",
-      "telegram"
+      "telegram",
+      "discord"
     ]
   },
   "runtime": {
@@ -41,7 +42,8 @@
       "OPENAI_API_KEY",
       "FMP_API_KEY",
       "TELEGRAM_BOT_TOKEN",
-      "TELEGRAM_CHAT_ID"
+      "TELEGRAM_CHAT_ID",
+      "DISCORD_WEBHOOK_URL"
     ]
   },
   "optimization": {

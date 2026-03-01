@@ -144,7 +144,7 @@ function buildRecommendations(signals, marketDataStatus) {
 
   if (marketDataStatus.enabled && signals.length > 0) {
     notes.push("Publish a premium update with entry/invalidations for top 2 signals.");
-    notes.push("Send a Telegram alert preview and link to paid channel/offer.");
+    notes.push("Send channel alerts (Discord/Telegram) with a premium link and clear invalidation levels.");
   } else if (marketDataStatus.enabled && signals.length === 0) {
     notes.push("No high-move signals this cycle. Publish a risk management tip for audience retention.");
     notes.push("Post a watchlist-only update and prepare next cycle triggers.");
@@ -195,13 +195,17 @@ function toMarkdown(report) {
   lines.push(`- Telegram attempted: ${report.telegram.attempted}`);
   lines.push(`- Telegram sent: ${report.telegram.sent}`);
   lines.push(`- Telegram reason: ${report.telegram.reason}`);
+  lines.push(`- Discord configured: ${report.discord.configured}`);
+  lines.push(`- Discord attempted: ${report.discord.attempted}`);
+  lines.push(`- Discord sent: ${report.discord.sent}`);
+  lines.push(`- Discord reason: ${report.discord.reason}`);
   lines.push("");
   lines.push(`- Dry run: ${report.dry_run}`);
 
   return `${lines.join("\n")}\n`;
 }
 
-function buildTelegramMessage(report, maxChars) {
+function buildUpdateMessage(report, maxChars) {
   const signalLine = report.signals.length > 0
     ? report.signals.map((item) => item.summary).join(" | ")
     : "No high-move signals this cycle.";
@@ -234,6 +238,23 @@ async function sendTelegramMessage(botToken, chatId, message) {
   if (!response.ok) {
     const body = await response.text();
     throw new Error(`Telegram API request failed with status ${response.status}: ${body}`);
+  }
+}
+
+async function sendDiscordMessage(webhookUrl, message) {
+  const response = await fetch(webhookUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      content: message
+    })
+  });
+
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(`Discord webhook request failed with status ${response.status}: ${body}`);
   }
 }
 
@@ -271,11 +292,13 @@ async function main() {
   const minMovePct = parseNumber(localConfig?.trading?.min_price_move_pct_alert, 0.5);
   const sendOnNoChange = Boolean(localConfig?.updates?.send_on_no_change);
   const maxTelegramChars = Math.max(300, parseNumber(localConfig?.updates?.max_telegram_chars, 3500));
+  const maxDiscordChars = Math.max(300, parseNumber(localConfig?.updates?.max_discord_chars, 1800));
 
   const marketSecretName = String(localConfig?.policy?.market_data_secret || "FMP_API_KEY");
   const telegramSecrets = Array.isArray(localConfig?.policy?.telegram_secrets)
     ? localConfig.policy.telegram_secrets
     : ["TELEGRAM_BOT_TOKEN", "TELEGRAM_CHAT_ID"];
+  const discordSecretName = String(localConfig?.policy?.discord_secret || "DISCORD_WEBHOOK_URL");
 
   const marketSecretStatus = getSecretStatus(marketSecretName, allowedSecrets);
   const approvedSecretPresent = allowedSecrets.some((secretName) => Boolean(process.env[secretName]));
@@ -316,6 +339,13 @@ async function main() {
   const fingerprintPayload = {
     business: localConfig.business || {},
     symbols,
+    delivery_config: {
+      send_on_no_change: sendOnNoChange,
+      max_telegram_chars: maxTelegramChars,
+      max_discord_chars: maxDiscordChars,
+      telegram_secret_names: telegramSecrets,
+      discord_secret_name: discordSecretName
+    },
     market_data_enabled: marketDataStatus.enabled,
     market_data_reason: marketDataStatus.reason,
     quotes: quotes.map((item) => ({
@@ -342,6 +372,8 @@ async function main() {
   const telegramTokenStatus = getSecretStatus(telegramSecrets[0], allowedSecrets);
   const telegramChatStatus = getSecretStatus(telegramSecrets[1], allowedSecrets);
   const telegramConfigured = externalApisAllowed && telegramTokenStatus.usable && telegramChatStatus.usable;
+  const discordSecretStatus = getSecretStatus(discordSecretName, allowedSecrets);
+  const discordConfigured = externalApisAllowed && discordSecretStatus.usable;
 
   const report = {
     generated_at: new Date().toISOString(),
@@ -372,19 +404,49 @@ async function main() {
         ? "Telegram is configured."
         : "Telegram disabled: missing allowlisted or present secrets."
     },
+    discord: {
+      configured: discordConfigured,
+      attempted: false,
+      sent: false,
+      reason: discordConfigured
+        ? "Discord is configured."
+        : "Discord disabled: missing allowlisted or present secret."
+    },
     dry_run: DRY_RUN
   };
 
-  if (telegramConfigured && !DRY_RUN) {
-    const message = buildTelegramMessage(report, maxTelegramChars);
-    report.telegram.attempted = true;
-    await sendTelegramMessage(process.env[telegramSecrets[0]], process.env[telegramSecrets[1]], message);
-    report.telegram.sent = true;
-    report.telegram.reason = "Telegram message sent successfully.";
-  } else if (telegramConfigured && DRY_RUN) {
-    report.telegram.attempted = false;
-    report.telegram.sent = false;
-    report.telegram.reason = "Dry run enabled; Telegram send skipped.";
+  if (telegramConfigured) {
+    const telegramMessage = buildUpdateMessage(report, maxTelegramChars);
+    if (DRY_RUN) {
+      report.telegram.reason = "Dry run enabled; Telegram send skipped.";
+    } else {
+      report.telegram.attempted = true;
+      try {
+        await sendTelegramMessage(process.env[telegramSecrets[0]], process.env[telegramSecrets[1]], telegramMessage);
+        report.telegram.sent = true;
+        report.telegram.reason = "Telegram message sent successfully.";
+      } catch (error) {
+        report.telegram.sent = false;
+        report.telegram.reason = `Telegram send failed: ${error.message || String(error)}`;
+      }
+    }
+  }
+
+  if (discordConfigured) {
+    const discordMessage = buildUpdateMessage(report, maxDiscordChars);
+    if (DRY_RUN) {
+      report.discord.reason = "Dry run enabled; Discord send skipped.";
+    } else {
+      report.discord.attempted = true;
+      try {
+        await sendDiscordMessage(process.env[discordSecretName], discordMessage);
+        report.discord.sent = true;
+        report.discord.reason = "Discord message sent successfully.";
+      } catch (error) {
+        report.discord.sent = false;
+        report.discord.reason = `Discord send failed: ${error.message || String(error)}`;
+      }
+    }
   }
 
   ensureDir(OUTPUT_DIR);
@@ -397,7 +459,9 @@ async function main() {
         fingerprint,
         last_reported_at: report.generated_at,
         last_telegram_sent: report.telegram.sent,
-        last_telegram_reason: report.telegram.reason
+        last_telegram_reason: report.telegram.reason,
+        last_discord_sent: report.discord.sent,
+        last_discord_reason: report.discord.reason
       },
       null,
       2

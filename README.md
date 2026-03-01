@@ -16,8 +16,8 @@ This repository runs two independent autonomous loops:
 Add these in `GitHub -> Settings -> Secrets and variables -> Actions`:
 
 - `FMP_API_KEY` (market quote feed)
-- `TELEGRAM_BOT_TOKEN`
-- `TELEGRAM_CHAT_ID`
+- `DISCORD_WEBHOOK_URL` (recommended update channel)
+- `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` (optional secondary channel)
 
 Without secrets, the business loop still runs and generates report files with missing-secret diagnostics.
 

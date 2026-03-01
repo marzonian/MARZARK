@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-03-01T17:06:27.549Z",
+  "generated_at": "2026-03-01T17:30:54.001Z",
   "no_change_cycle": false,
   "business": {
     "name": "MARZARK Trading Intelligence",
@@ -31,7 +31,8 @@
       "OPENAI_API_KEY",
       "FMP_API_KEY",
       "TELEGRAM_BOT_TOKEN",
-      "TELEGRAM_CHAT_ID"
+      "TELEGRAM_CHAT_ID",
+      "DISCORD_WEBHOOK_URL"
     ],
     "approved_secret_present": false
   },
@@ -40,6 +41,12 @@
     "attempted": false,
     "sent": false,
     "reason": "Telegram disabled: missing allowlisted or present secrets."
+  },
+  "discord": {
+    "configured": false,
+    "attempted": false,
+    "sent": false,
+    "reason": "Discord disabled: missing allowlisted or present secret."
   },
   "dry_run": true
 }

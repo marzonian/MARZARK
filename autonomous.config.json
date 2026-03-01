@@ -18,7 +18,8 @@
   },
   "updates": {
     "send_on_no_change": false,
-    "max_telegram_chars": 3500
+    "max_telegram_chars": 3500,
+    "max_discord_chars": 1800
   },
   "policy": {
     "allow_external_apis_with_secret_only": true,
@@ -27,6 +28,7 @@
     "telegram_secrets": [
       "TELEGRAM_BOT_TOKEN",
       "TELEGRAM_CHAT_ID"
-    ]
+    ],
+    "discord_secret": "DISCORD_WEBHOOK_URL"
   }
 }
