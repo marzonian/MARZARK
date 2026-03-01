@@ -173,6 +173,49 @@ function parseDatabentoJsonRows(payloadText) {
     .filter(Boolean);
 }
 
+function buildDatabentoSymbolMap(rows) {
+  const symbolByInstrumentId = new Map();
+
+  rows.forEach((row) => {
+    if (!row || typeof row !== "object") {
+      return;
+    }
+
+    const inSymbol = String(row.stype_in_symbol || row.raw_symbol || row.symbol || "").trim();
+    const instrumentId = String(row.instrument_id ?? row.i ?? row.stype_out_symbol ?? "").trim();
+    if (!inSymbol || !instrumentId) {
+      return;
+    }
+
+    symbolByInstrumentId.set(instrumentId, inSymbol);
+  });
+
+  return symbolByInstrumentId;
+}
+
+function pickDatabentoSymbol(row, symbolByInstrumentId) {
+  const direct = String(
+    row.symbol ||
+    row.raw_symbol ||
+    row.stype_in_symbol ||
+    row.stype_out_symbol ||
+    row.s ||
+    ""
+  ).trim();
+  if (direct && !/^\d+$/.test(direct)) {
+    return direct;
+  }
+
+  const instrumentId = String(row.instrument_id ?? row.i ?? "").trim();
+  if (instrumentId && symbolByInstrumentId.has(instrumentId)) {
+    return symbolByInstrumentId.get(instrumentId);
+  }
+  if (instrumentId) {
+    return `ID:${instrumentId}`;
+  }
+  return "";
+}
+
 async function fetchDatabentoQuotes(options) {
   const {
     symbols,
@@ -186,12 +229,12 @@ async function fetchDatabentoQuotes(options) {
 
   const endpoint = "https://hist.databento.com/v0/timeseries.get_range";
   const authHeader = Buffer.from(`${apiKey}:`).toString("base64");
-  const body = new URLSearchParams({
+  const buildBody = (stypeOutValue) => new URLSearchParams({
     dataset,
     schema,
     symbols: symbols.join(","),
     stype_in: stypeIn,
-    stype_out: stypeOut,
+    stype_out: stypeOutValue,
     start: isoMinutesAgo(lookbackMinutes),
     end: new Date().toISOString(),
     encoding: "json",
@@ -199,23 +242,37 @@ async function fetchDatabentoQuotes(options) {
     map_symbols: "true"
   });
 
-  const response = await fetch(endpoint, {
-    method: "POST",
-    headers: {
-      "Authorization": `Basic ${authHeader}`,
-      "Content-Type": "application/x-www-form-urlencoded",
-      "Accept": "application/json,text/plain"
-    },
-    body
-  });
-
-  const responseText = await response.text();
-  if (!response.ok) {
-    const preview = truncate(responseText, 220);
-    throw new Error(`Databento request failed with status ${response.status}: ${preview}`);
+  async function requestRange(stypeOutValue) {
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Authorization": `Basic ${authHeader}`,
+        "Content-Type": "application/x-www-form-urlencoded",
+        "Accept": "application/json,text/plain"
+      },
+      body: buildBody(stypeOutValue)
+    });
+    const responseText = await response.text();
+    return { response, responseText, stypeOutValue };
   }
 
-  const rows = parseDatabentoJsonRows(responseText);
+  let requestResult = await requestRange(stypeOut);
+  if (
+    !requestResult.response.ok &&
+    requestResult.response.status === 422 &&
+    String(requestResult.responseText).includes("symbology_invalid_request") &&
+    stypeOut !== "instrument_id"
+  ) {
+    requestResult = await requestRange("instrument_id");
+  }
+
+  if (!requestResult.response.ok) {
+    const preview = truncate(requestResult.responseText, 220);
+    throw new Error(`Databento request failed with status ${requestResult.response.status}: ${preview}`);
+  }
+
+  const rows = parseDatabentoJsonRows(requestResult.responseText);
+  const symbolByInstrumentId = buildDatabentoSymbolMap(rows);
   const bySymbol = new Map();
 
   rows.forEach((row) => {
@@ -223,15 +280,7 @@ async function fetchDatabentoQuotes(options) {
       return;
     }
 
-    const symbol = String(
-      row.symbol ||
-      row.raw_symbol ||
-      row.stype_in_symbol ||
-      row.stype_out_symbol ||
-      row.s ||
-      ""
-    );
-
+    const symbol = pickDatabentoSymbol(row, symbolByInstrumentId);
     if (!symbol || symbol === "NaN") {
       return;
     }
@@ -474,7 +523,7 @@ async function main() {
   const databentoSchema = String(localConfig?.policy?.databento_schema || "ohlcv-1m");
   const databentoLookbackMinutes = parseNumber(localConfig?.policy?.databento_lookback_minutes, 180);
   const databentoStypeIn = String(localConfig?.policy?.databento_stype_in || "raw_symbol");
-  const databentoStypeOut = String(localConfig?.policy?.databento_stype_out || "raw_symbol");
+  const databentoStypeOut = String(localConfig?.policy?.databento_stype_out || "instrument_id");
 
   const telegramSecrets = Array.isArray(localConfig?.policy?.telegram_secrets)
     ? localConfig.policy.telegram_secrets

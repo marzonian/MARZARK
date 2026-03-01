@@ -29,7 +29,7 @@
     "databento_schema": "ohlcv-1m",
     "databento_lookback_minutes": 180,
     "databento_stype_in": "raw_symbol",
-    "databento_stype_out": "raw_symbol",
+    "databento_stype_out": "instrument_id",
     "telegram_secrets": [
       "TELEGRAM_BOT_TOKEN",
       "TELEGRAM_CHAT_ID"
