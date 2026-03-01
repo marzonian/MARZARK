@@ -1,6 +1,6 @@
 {
-  "fingerprint": "e36cbea99846bd39258ffa10bd15349d6cb4e201fe6463538672e2a69b493467",
-  "last_reported_at": "2026-03-01T18:03:56.799Z",
+  "fingerprint": "0300100eb6a468495f501961f351594cf1da9e0755675130e3ef6dd0e3a1dcf6",
+  "last_reported_at": "2026-03-01T18:12:30.500Z",
   "last_telegram_sent": false,
   "last_telegram_reason": "Telegram disabled: missing allowlisted or present secrets.",
   "last_discord_sent": true,

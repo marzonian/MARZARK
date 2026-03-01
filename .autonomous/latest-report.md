@@ -1,6 +1,6 @@
 # Autonomous Business Report
 
-Generated: 2026-03-01T18:03:56.799Z
+Generated: 2026-03-01T18:12:30.500Z
 Business: MARZARK Trading Intelligence
 Offer: Risk-first market brief with premium alert candidates
 Price: $29/month
@@ -8,7 +8,7 @@ No-change cycle: false
 
 ## Market Data
 - Enabled: false
-- Reason: Market data provider error: FMP API request failed with status 403
+- Reason: Market data provider error: FMP API request failed for DIA with status 402
 - Symbols: SPY, QQQ, IWM, DIA
 - Quotes collected: 0
 

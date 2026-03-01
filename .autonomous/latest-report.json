@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-03-01T18:03:56.799Z",
+  "generated_at": "2026-03-01T18:12:30.500Z",
   "no_change_cycle": false,
   "business": {
     "name": "MARZARK Trading Intelligence",
@@ -17,7 +17,7 @@
   },
   "market_data": {
     "enabled": false,
-    "reason": "Market data provider error: FMP API request failed with status 403"
+    "reason": "Market data provider error: FMP API request failed for DIA with status 402"
   },
   "quotes": [],
   "signals": [],
