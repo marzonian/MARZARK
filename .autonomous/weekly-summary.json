@@ -1,0 +1,12 @@
+{
+  "window_type": "weekly",
+  "window_key": "2026-W09",
+  "generated_at": "2026-03-01T21:56:49.772Z",
+  "cycles_total": 1,
+  "cycles_with_signals": 0,
+  "market_enabled_cycles": 1,
+  "signal_hit_rate_pct": 0,
+  "top_symbols": [],
+  "strongest_signal": null,
+  "latest_signal_cycle": null
+}

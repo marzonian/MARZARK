@@ -1,6 +1,18 @@
 {
-  "fingerprint": "72ff794deb856f02c39780b36e99fe4dba0d81bfe5889032e1ed56d2461de612",
-  "last_reported_at": "2026-03-01T20:41:38.889Z",
+  "fingerprint": "7dcd3c5a351666c713177e041d7e84094993e1db0beac8f9e5a1fa5df3efb73e",
+  "last_reported_at": "2026-03-01T21:56:49.772Z",
+  "history": [
+    {
+      "generated_at": "2026-03-01T21:56:49.772Z",
+      "market_data_enabled": true,
+      "signals": []
+    }
+  ],
+  "recent_signals": [],
+  "premium_windows": {
+    "daily_key": "2026-03-01",
+    "weekly_key": "2026-W09"
+  },
   "last_telegram_sent": false,
   "last_telegram_reason": "Telegram disabled: missing allowlisted or present secrets.",
   "last_discord_sent": true,

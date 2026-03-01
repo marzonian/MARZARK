@@ -1,6 +1,6 @@
 # Autonomous Business Report
 
-Generated: 2026-03-01T20:41:38.889Z
+Generated: 2026-03-01T21:56:49.772Z
 Business: MARZARK Trading Intelligence
 Offer: Risk-first market brief with premium alert candidates
 Price: $29/month
@@ -15,6 +15,22 @@ No-change cycle: false
 
 ## Signals
 - No signals met threshold this cycle.
+
+## Risk Filters
+- Max alerts per cycle: 2
+- Max abs move %: 6
+- Min volume: 0
+- Max quote age (minutes): 720
+- Symbol cooldown (minutes): 120
+- Candidates before cap: 0
+- Dropped by cap: 0
+- Filtered stale quotes: 0
+
+## Premium Windows
+- Daily file: .autonomous/daily-premium.md (2026-03-01)
+- Daily hit rate: 0.00%
+- Weekly file: .autonomous/weekly-summary.md (2026-W09)
+- Weekly hit rate: 0.00%
 
 ## Recommendations
 - No high-move signals this cycle. Publish a risk management tip for audience retention.

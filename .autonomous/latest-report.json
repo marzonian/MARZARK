@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-03-01T20:41:38.889Z",
+  "generated_at": "2026-03-01T21:56:49.772Z",
   "no_change_cycle": false,
   "business": {
     "name": "MARZARK Trading Intelligence",
@@ -13,7 +13,15 @@
       "IWM",
       "DIA"
     ],
-    "min_price_move_pct_alert": 0.5
+    "min_price_move_pct_alert": 0.5,
+    "risk_filters": {
+      "min_move_pct": 0.5,
+      "max_abs_move_pct": 6,
+      "min_volume": 0,
+      "max_quote_age_minutes": 720,
+      "symbol_cooldown_minutes": 120,
+      "max_alerts_per_cycle": 2
+    }
   },
   "market_data": {
     "provider": "databento",
@@ -25,22 +33,64 @@
       "symbol": "SPY",
       "price": 684.27,
       "change_pct": -0.20417985328218782,
-      "volume": 11688
+      "volume": 11688,
+      "as_of": "2026-02-28T00:00:00.000Z",
+      "bars_count": 25
     },
     {
       "symbol": "QQQ",
       "price": 606.45,
       "change_pct": -0.172839506172832,
-      "volume": 372784
+      "volume": 372784,
+      "as_of": "2026-02-28T00:00:00.000Z",
+      "bars_count": 34
     },
     {
       "symbol": "IWM",
       "price": 260.88,
       "change_pct": -0.1263351326518832,
-      "volume": 24911
+      "volume": 24911,
+      "as_of": "2026-02-28T00:00:00.000Z",
+      "bars_count": 25
     }
   ],
   "signals": [],
+  "signal_diagnostics": {
+    "filters": {
+      "min_move_pct": 0.5,
+      "max_abs_move_pct": 6,
+      "min_volume": 0,
+      "max_quote_age_minutes": 720,
+      "symbol_cooldown_minutes": 120,
+      "max_alerts_per_cycle": 2
+    },
+    "counts": {
+      "quotes_total": 3,
+      "candidates_before_cap": 0,
+      "selected": 0,
+      "dropped_by_cap": 0,
+      "missing_change": 0,
+      "under_min_move": 3,
+      "over_max_move": 0,
+      "low_volume": 0,
+      "stale_quote": 0,
+      "cooldown": 0
+    },
+    "filtered_examples": [
+      {
+        "symbol": "SPY",
+        "reason": "under_min_move"
+      },
+      {
+        "symbol": "QQQ",
+        "reason": "under_min_move"
+      },
+      {
+        "symbol": "IWM",
+        "reason": "under_min_move"
+      }
+    ]
+  },
   "recommendations": [
     "No high-move signals this cycle. Publish a risk management tip for audience retention.",
     "Post a watchlist-only update and prepare next cycle triggers."
@@ -69,5 +119,32 @@
     "sent": true,
     "reason": "Discord message sent successfully."
   },
-  "dry_run": false
+  "dry_run": false,
+  "premium": {
+    "daily": {
+      "window_type": "daily",
+      "window_key": "2026-03-01",
+      "generated_at": "2026-03-01T21:56:49.772Z",
+      "cycles_total": 1,
+      "cycles_with_signals": 0,
+      "market_enabled_cycles": 1,
+      "signal_hit_rate_pct": 0,
+      "top_symbols": [],
+      "strongest_signal": null,
+      "latest_signal_cycle": null
+    },
+    "weekly": {
+      "window_type": "weekly",
+      "window_key": "2026-W09",
+      "generated_at": "2026-03-01T21:56:49.772Z",
+      "cycles_total": 1,
+      "cycles_with_signals": 0,
+      "market_enabled_cycles": 1,
+      "signal_hit_rate_pct": 0,
+      "top_symbols": [],
+      "strongest_signal": null,
+      "latest_signal_cycle": null
+    },
+    "history_entries": 1
+  }
 }
