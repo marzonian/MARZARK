@@ -1,8 +1,8 @@
 # Heartbeat Report
 
-Generated: 2026-03-01T11:52:06.649Z
+Generated: 2026-03-01T11:53:02.144Z
 Tracked paths: heartbeat.md, config.json, skills/
-Relevant commit count: 1
+Relevant commit count: 2
 No-change cycle: false
 
 ## Heartbeat Settings
@@ -10,6 +10,8 @@ No-change cycle: false
 - report_on_no_change: false
 
 ## Recent Memory Changes
+- 34e67e10 | 2026-03-01T06:52:38-05:00 | feat: add heartbeat tunables, secret allowlist gating, and manual workflow inputs
+  files: config.json, heartbeat.md
 - b079acaa | 2026-03-01T04:36:03-05:00 | feat: add MARZARK heartbeat automation and runner-safe skill baseline
   files: config.json, heartbeat.md, skills/repo-memory-summary/README.md, skills/repo-memory-summary/index.js
 

@@ -1,12 +1,21 @@
 {
-  "generated_at": "2026-03-01T11:52:06.649Z",
+  "generated_at": "2026-03-01T11:53:02.144Z",
   "tracked_paths": [
     "heartbeat.md",
     "config.json",
     "skills/"
   ],
-  "relevant_commit_count": 1,
+  "relevant_commit_count": 2,
   "recent_commits": [
+    {
+      "hash": "34e67e10c0f00fffe018eea37d801a0166961481",
+      "date": "2026-03-01T06:52:38-05:00",
+      "subject": "feat: add heartbeat tunables, secret allowlist gating, and manual workflow inputs",
+      "files": [
+        "config.json",
+        "heartbeat.md"
+      ]
+    },
     {
       "hash": "b079acaa0e6b2b9527e370c0a73d6d73158d9bd6",
       "date": "2026-03-01T04:36:03-05:00",
