@@ -1,0 +1,20 @@
+{
+  "generated_at": "2026-03-01T09:35:06.660Z",
+  "tracked_paths": [
+    "heartbeat.md",
+    "config.json",
+    "skills/"
+  ],
+  "relevant_commit_count": 0,
+  "recent_commits": [],
+  "optimization_suggestions": [
+    "No tracked memory commits detected; heartbeat can remain in low-cost idle mode.",
+    "No-change cycle skipping is enabled to reduce unnecessary model/runtime cost.",
+    "Diff-first scanning is enabled to reduce latency vs full-repository scans."
+  ],
+  "policy": {
+    "external_api_calls": "require_secret",
+    "fallback_reasoning": "local_ollama_only"
+  },
+  "dry_run": true
+}

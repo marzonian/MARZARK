@@ -1,0 +1,10 @@
+{
+  "fingerprint": "582801c9a0e7de741e4a718e27770f8b8d06e18b727bd5a832362c3e9e1896ed",
+  "last_reported_at": "2026-03-01T09:35:06.660Z",
+  "tracked_paths": [
+    "heartbeat.md",
+    "config.json",
+    "skills/"
+  ],
+  "relevant_commit_count": 0
+}

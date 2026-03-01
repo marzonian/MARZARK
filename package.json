@@ -1,0 +1,11 @@
+{
+  "name": "marzark-heartbeat",
+  "version": "1.0.0",
+  "private": true,
+  "description": "MARZARK heartbeat runner for GitHub Actions",
+  "scripts": {
+    "heartbeat": "node scripts/heartbeat.js",
+    "heartbeat:dry": "HEARTBEAT_DRY_RUN=true HEARTBEAT_COMMIT=false HEARTBEAT_PUSH=false node scripts/heartbeat.js",
+    "skill:repo-summary": "node skills/repo-memory-summary/index.js"
+  }
+}

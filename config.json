@@ -1,0 +1,45 @@
+{
+  "agent": {
+    "name": "marzark-agent",
+    "mode": "autonomous",
+    "transport": [
+      "web-chat",
+      "telegram"
+    ]
+  },
+  "runtime": {
+    "environment": "docker-compose",
+    "executor": "github-actions-runner",
+    "reasoning_provider": "ollama",
+    "ollama": {
+      "base_url": "http://ollama:11434",
+      "model": "llama3.1:8b",
+      "temperature": 0.2
+    }
+  },
+  "memory": {
+    "type": "git-repo",
+    "require_commit_for_updates": true,
+    "tracked_paths": [
+      "heartbeat.md",
+      "config.json",
+      "skills/"
+    ]
+  },
+  "heartbeat": {
+    "enabled": true,
+    "cron": "*/10 * * * *",
+    "task": "Scan repository changes, summarize deltas, suggest low-risk optimizations, and commit memory updates when present."
+  },
+  "policy": {
+    "external_api_calls": "require_secret",
+    "default_without_secret": "deny",
+    "fallback_reasoning": "local_ollama_only"
+  },
+  "optimization": {
+    "diff_first_scanning": true,
+    "skip_no_change_cycles": true,
+    "max_model_calls_per_cycle": 3,
+    "summary_style": "concise"
+  }
+}
