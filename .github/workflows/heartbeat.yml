@@ -4,6 +4,22 @@ on:
   schedule:
     - cron: "*/10 * * * *"
   workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Run without commit/push"
+        required: false
+        default: false
+        type: boolean
+      commit_changes:
+        description: "Commit heartbeat report updates"
+        required: false
+        default: true
+        type: boolean
+      push_changes:
+        description: "Push heartbeat commits to remote"
+        required: false
+        default: true
+        type: boolean
 
 permissions:
   contents: write
@@ -28,6 +44,7 @@ jobs:
 
       - name: Execute heartbeat
         env:
-          HEARTBEAT_COMMIT: "true"
-          HEARTBEAT_PUSH: "true"
+          HEARTBEAT_DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.dry_run || 'false' }}
+          HEARTBEAT_COMMIT: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.commit_changes || 'true' }}
+          HEARTBEAT_PUSH: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.push_changes || 'true' }}
         run: node scripts/heartbeat.js

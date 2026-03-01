@@ -11,6 +11,9 @@ const STATE_FILE = path.join(HEARTBEAT_DIR, "state.json");
 const REPORT_MD = path.join(HEARTBEAT_DIR, "latest-report.md");
 const REPORT_JSON = path.join(HEARTBEAT_DIR, "latest-report.json");
 
+const DEFAULT_MAX_COMMITS_SCAN = 20;
+const DEFAULT_TRACKED_PATHS = ["heartbeat.md", "config.json", "skills/"];
+
 const DRY_RUN = process.env.HEARTBEAT_DRY_RUN === "true";
 const SHOULD_COMMIT = process.env.HEARTBEAT_COMMIT !== "false";
 const SHOULD_PUSH = process.env.HEARTBEAT_PUSH === "true";
@@ -32,6 +35,10 @@ function run(cmd, options = {}) {
   }
 }
 
+function shellQuote(value) {
+  return `'${String(value).replace(/'/g, "'\\''")}'`;
+}
+
 function readJson(filePath, fallback) {
   try {
     return JSON.parse(fs.readFileSync(filePath, "utf8"));
@@ -44,11 +51,112 @@ function ensureDir(dirPath) {
   fs.mkdirSync(dirPath, { recursive: true });
 }
 
+function parsePositiveInt(value, fallback) {
+  const parsed = Number.parseInt(String(value), 10);
+  if (!Number.isInteger(parsed) || parsed <= 0) {
+    return fallback;
+  }
+  return parsed;
+}
+
+function parseBoolean(value, fallback) {
+  if (typeof value === "boolean") {
+    return value;
+  }
+  if (typeof value === "string") {
+    const lowered = value.trim().toLowerCase();
+    if (lowered === "true") {
+      return true;
+    }
+    if (lowered === "false") {
+      return false;
+    }
+  }
+  return fallback;
+}
+
 function getTrackedPaths(config) {
   const configured = Array.isArray(config?.memory?.tracked_paths)
-    ? config.memory.tracked_paths
+    ? config.memory.tracked_paths.filter((item) => typeof item === "string" && item.trim().length > 0)
     : [];
-  return configured.length > 0 ? configured : ["heartbeat.md", "config.json", "skills/"];
+  return configured.length > 0 ? configured : DEFAULT_TRACKED_PATHS;
+}
+
+function getHeartbeatSettings(config) {
+  const heartbeat = config?.heartbeat || {};
+  return {
+    max_commits_scan: parsePositiveInt(heartbeat.max_commits_scan, DEFAULT_MAX_COMMITS_SCAN),
+    report_on_no_change: parseBoolean(heartbeat.report_on_no_change, false)
+  };
+}
+
+function getPolicyState(config) {
+  const policy = config?.policy || {};
+  const allowedSecrets = Array.isArray(policy.allowed_secrets)
+    ? policy.allowed_secrets
+        .filter((name) => typeof name === "string" && /^[A-Z0-9_]+$/.test(name))
+        .map((name) => name.trim())
+    : [];
+  const presentAllowedSecrets = allowedSecrets.filter((name) => Boolean(process.env[name]));
+  const externalApiCalls = typeof policy.external_api_calls === "string"
+    ? policy.external_api_calls
+    : "require_secret";
+
+  let externalApiEnabled = false;
+  let externalApiReason = "";
+
+  if (externalApiCalls === "allow") {
+    externalApiEnabled = true;
+    externalApiReason = "Policy set to allow.";
+  } else if (externalApiCalls === "deny") {
+    externalApiEnabled = false;
+    externalApiReason = "Policy set to deny.";
+  } else if (externalApiCalls === "require_secret") {
+    if (allowedSecrets.length === 0) {
+      externalApiEnabled = false;
+      externalApiReason = "No approved secrets configured in policy.allowed_secrets.";
+    } else if (presentAllowedSecrets.length === 0) {
+      externalApiEnabled = false;
+      externalApiReason = "No approved secrets are present in environment.";
+    } else {
+      externalApiEnabled = true;
+      externalApiReason = "At least one approved secret is present in environment.";
+    }
+  } else {
+    externalApiEnabled = false;
+    externalApiReason = `Unknown external_api_calls policy '${externalApiCalls}', defaulting to deny.`;
+  }
+
+  return {
+    external_api_calls: externalApiCalls,
+    default_without_secret: policy.default_without_secret || "deny",
+    fallback_reasoning: policy.fallback_reasoning || "local_ollama_only",
+    allowed_secrets: allowedSecrets,
+    present_allowed_secrets: presentAllowedSecrets,
+    external_api_enabled: externalApiEnabled,
+    external_api_reason: externalApiReason
+  };
+}
+
+function enforceReasoningPolicy(config, policyState) {
+  const provider = typeof config?.runtime?.reasoning_provider === "string"
+    ? config.runtime.reasoning_provider
+    : "ollama";
+  const providerKey = provider.toLowerCase();
+
+  if (providerKey !== "ollama" && !policyState.external_api_enabled) {
+    throw new Error(
+      `reasoning_provider='${provider}' requires external API access, but access is blocked: ${policyState.external_api_reason}`
+    );
+  }
+
+  if (policyState.external_api_enabled) {
+    console.log(`Heartbeat: external APIs enabled (${policyState.external_api_reason})`);
+  } else {
+    console.log(`Heartbeat: external APIs disabled (${policyState.external_api_reason})`);
+  }
+
+  return provider;
 }
 
 function parseGitLog(raw) {
@@ -81,7 +189,7 @@ function buildFingerprint(payload) {
   return crypto.createHash("sha256").update(JSON.stringify(payload)).digest("hex");
 }
 
-function summarizeOptimizations(config, commits) {
+function summarizeOptimizations(config, commits, heartbeatSettings, policyState) {
   const suggestions = [];
 
   if (commits.length === 0) {
@@ -100,6 +208,16 @@ function summarizeOptimizations(config, commits) {
     suggestions.push("Enable diff_first_scanning for lower latency and reduced token usage.");
   }
 
+  if (heartbeatSettings.report_on_no_change) {
+    suggestions.push("report_on_no_change is enabled; expect frequent report updates with higher commit noise.");
+  } else {
+    suggestions.push("report_on_no_change is disabled; no-change cycles are skipped to reduce churn.");
+  }
+
+  if (!policyState.external_api_enabled) {
+    suggestions.push("External APIs are gated off unless an approved secret is present.");
+  }
+
   return suggestions;
 }
 
@@ -110,6 +228,11 @@ function formatMarkdown(report) {
   lines.push(`Generated: ${report.generated_at}`);
   lines.push(`Tracked paths: ${report.tracked_paths.join(", ")}`);
   lines.push(`Relevant commit count: ${report.relevant_commit_count}`);
+  lines.push(`No-change cycle: ${report.no_change_cycle}`);
+  lines.push("");
+  lines.push("## Heartbeat Settings");
+  lines.push(`- max_commits_scan: ${report.heartbeat_settings.max_commits_scan}`);
+  lines.push(`- report_on_no_change: ${report.heartbeat_settings.report_on_no_change}`);
   lines.push("");
   lines.push("## Recent Memory Changes");
 
@@ -130,7 +253,12 @@ function formatMarkdown(report) {
   lines.push("");
   lines.push("## Policy");
   lines.push(`- External API calls: ${report.policy.external_api_calls}`);
+  lines.push(`- External API enabled this run: ${report.policy.external_api_enabled}`);
+  lines.push(`- External API gate reason: ${report.policy.external_api_reason}`);
+  lines.push(`- Approved secrets: ${report.policy.allowed_secrets.join(", ") || "none"}`);
+  lines.push(`- Present approved secrets: ${report.policy.present_allowed_secrets.join(", ") || "none"}`);
   lines.push(`- Fallback reasoning: ${report.policy.fallback_reasoning}`);
+  lines.push(`- Reasoning provider: ${report.runtime.reasoning_provider}`);
   lines.push("");
   lines.push(`- Dry run: ${report.dry_run}`);
 
@@ -148,9 +276,9 @@ function commitHeartbeatFiles(message) {
 
   const actorName = process.env.GITHUB_ACTOR || "github-actions[bot]";
   const actorEmail = process.env.GIT_AUTHOR_EMAIL || "41898282+github-actions[bot]@users.noreply.github.com";
-  run(`git config user.name "${actorName}"`);
-  run(`git config user.email "${actorEmail}"`);
-  run(`git commit -m "${message}"`);
+  run(`git config user.name ${shellQuote(actorName)}`);
+  run(`git config user.email ${shellQuote(actorEmail)}`);
+  run(`git commit -m ${shellQuote(message)}`);
   return true;
 }
 
@@ -160,34 +288,33 @@ function main() {
   const configPath = path.join(ROOT, "config.json");
   const config = readJson(configPath, {});
   const trackedPaths = getTrackedPaths(config);
+  const heartbeatSettings = getHeartbeatSettings(config);
+  const policyState = getPolicyState(config);
+  const reasoningProvider = enforceReasoningPolicy(config, policyState);
 
   const gitLogCmd = [
     "git log",
-    "-n 20",
+    `-n ${heartbeatSettings.max_commits_scan}`,
     '--pretty=format:"--COMMIT--%n%H%n%cI%n%s"',
     "--name-only",
     "--",
-    ...trackedPaths.map((p) => `"${p}"`)
+    ...trackedPaths.map((item) => `"${item}"`)
   ].join(" ");
 
   const rawLog = run(gitLogCmd, { allowFail: true });
   const commits = parseGitLog(rawLog);
 
-  const reportPayload = {
-    generated_at: new Date().toISOString(),
-    tracked_paths: trackedPaths,
-    relevant_commit_count: commits.length,
-    recent_commits: commits,
-    optimization_suggestions: summarizeOptimizations(config, commits),
-    policy: {
-      external_api_calls: config?.policy?.external_api_calls || "require_secret",
-      fallback_reasoning: config?.policy?.fallback_reasoning || "local_ollama_only"
-    },
-    dry_run: DRY_RUN
-  };
-
   const fingerprintPayload = {
     tracked_paths: trackedPaths,
+    heartbeat_settings: heartbeatSettings,
+    policy_gate: {
+      external_api_calls: policyState.external_api_calls,
+      external_api_enabled: policyState.external_api_enabled,
+      present_allowed_secrets: policyState.present_allowed_secrets
+    },
+    runtime: {
+      reasoning_provider: reasoningProvider
+    },
     commits: commits.map((commit) => ({
       hash: commit.hash,
       files: commit.files
@@ -198,10 +325,25 @@ function main() {
   const previousState = readJson(STATE_FILE, {});
   const changed = previousState.fingerprint !== fingerprint;
 
-  if (!changed) {
+  if (!changed && !heartbeatSettings.report_on_no_change) {
     console.log("Heartbeat: no tracked memory changes since last report. Skipping file update.");
     return;
   }
+
+  const reportPayload = {
+    generated_at: new Date().toISOString(),
+    tracked_paths: trackedPaths,
+    relevant_commit_count: commits.length,
+    recent_commits: commits,
+    no_change_cycle: !changed,
+    heartbeat_settings: heartbeatSettings,
+    optimization_suggestions: summarizeOptimizations(config, commits, heartbeatSettings, policyState),
+    policy: policyState,
+    runtime: {
+      reasoning_provider: reasoningProvider
+    },
+    dry_run: DRY_RUN
+  };
 
   ensureDir(HEARTBEAT_DIR);
 
@@ -209,7 +351,8 @@ function main() {
     fingerprint,
     last_reported_at: reportPayload.generated_at,
     tracked_paths: trackedPaths,
-    relevant_commit_count: commits.length
+    relevant_commit_count: commits.length,
+    no_change_cycle: reportPayload.no_change_cycle
   };
 
   fs.writeFileSync(REPORT_JSON, JSON.stringify(reportPayload, null, 2));

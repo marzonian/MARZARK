@@ -4,6 +4,8 @@
 - Enabled: true
 - Schedule (cron): `*/10 * * * *` (every 10 minutes)
 - Runner: GitHub Actions (persistent recurring workflow)
+- Max commit scan window: `heartbeat.max_commits_scan` (default: 20)
+- No-change reporting: `heartbeat.report_on_no_change` (default: false)
 
 ## Recurring Task Logic
 Every 10 minutes, run this sequence:
@@ -28,6 +30,13 @@ Every 10 minutes, run this sequence:
 ## External API Policy
 - Do not call external APIs unless a required secret is present.
 - Default reasoning provider is local Ollama.
+- Approved secret allowlist is controlled by `policy.allowed_secrets`.
+
+## Manual Trigger Controls
+- `workflow_dispatch` supports:
+  - `dry_run` (skip commit/push)
+  - `commit_changes`
+  - `push_changes`
 
 ## Report Artifacts
 - `.heartbeat/latest-report.md`

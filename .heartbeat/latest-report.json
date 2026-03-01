@@ -1,20 +1,48 @@
 {
-  "generated_at": "2026-03-01T09:35:06.660Z",
+  "generated_at": "2026-03-01T11:52:06.649Z",
   "tracked_paths": [
     "heartbeat.md",
     "config.json",
     "skills/"
   ],
-  "relevant_commit_count": 0,
-  "recent_commits": [],
+  "relevant_commit_count": 1,
+  "recent_commits": [
+    {
+      "hash": "b079acaa0e6b2b9527e370c0a73d6d73158d9bd6",
+      "date": "2026-03-01T04:36:03-05:00",
+      "subject": "feat: add MARZARK heartbeat automation and runner-safe skill baseline",
+      "files": [
+        "config.json",
+        "heartbeat.md",
+        "skills/repo-memory-summary/README.md",
+        "skills/repo-memory-summary/index.js"
+      ]
+    }
+  ],
+  "no_change_cycle": false,
+  "heartbeat_settings": {
+    "max_commits_scan": 20,
+    "report_on_no_change": false
+  },
   "optimization_suggestions": [
-    "No tracked memory commits detected; heartbeat can remain in low-cost idle mode.",
     "No-change cycle skipping is enabled to reduce unnecessary model/runtime cost.",
-    "Diff-first scanning is enabled to reduce latency vs full-repository scans."
+    "Diff-first scanning is enabled to reduce latency vs full-repository scans.",
+    "report_on_no_change is disabled; no-change cycles are skipped to reduce churn.",
+    "External APIs are gated off unless an approved secret is present."
   ],
   "policy": {
     "external_api_calls": "require_secret",
-    "fallback_reasoning": "local_ollama_only"
+    "default_without_secret": "deny",
+    "fallback_reasoning": "local_ollama_only",
+    "allowed_secrets": [
+      "OPENAI_API_KEY"
+    ],
+    "present_allowed_secrets": [],
+    "external_api_enabled": false,
+    "external_api_reason": "No approved secrets are present in environment."
+  },
+  "runtime": {
+    "reasoning_provider": "ollama"
   },
   "dry_run": true
 }

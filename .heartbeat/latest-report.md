@@ -1,19 +1,31 @@
 # Heartbeat Report
 
-Generated: 2026-03-01T09:35:06.660Z
+Generated: 2026-03-01T11:52:06.649Z
 Tracked paths: heartbeat.md, config.json, skills/
-Relevant commit count: 0
+Relevant commit count: 1
+No-change cycle: false
+
+## Heartbeat Settings
+- max_commits_scan: 20
+- report_on_no_change: false
 
 ## Recent Memory Changes
-- No tracked memory changes found.
+- b079acaa | 2026-03-01T04:36:03-05:00 | feat: add MARZARK heartbeat automation and runner-safe skill baseline
+  files: config.json, heartbeat.md, skills/repo-memory-summary/README.md, skills/repo-memory-summary/index.js
 
 ## Optimization Suggestions
-- No tracked memory commits detected; heartbeat can remain in low-cost idle mode.
 - No-change cycle skipping is enabled to reduce unnecessary model/runtime cost.
 - Diff-first scanning is enabled to reduce latency vs full-repository scans.
+- report_on_no_change is disabled; no-change cycles are skipped to reduce churn.
+- External APIs are gated off unless an approved secret is present.
 
 ## Policy
 - External API calls: require_secret
+- External API enabled this run: false
+- External API gate reason: No approved secrets are present in environment.
+- Approved secrets: OPENAI_API_KEY
+- Present approved secrets: none
 - Fallback reasoning: local_ollama_only
+- Reasoning provider: ollama
 
 - Dry run: true
