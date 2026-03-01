@@ -5,7 +5,7 @@ This repository now contains a fully scheduled autonomous business runner:
 - Workflow: `.github/workflows/autonomous-business.yml`
 - Script: `scripts/autonomous-business.js`
 - Config: `autonomous.config.json`
-- Output: `.autonomous/latest-report.md`, `.autonomous/latest-report.json`, `.autonomous/state.json`
+- Output: `.autonomous/latest-report.md`, `.autonomous/latest-report.json`, `.autonomous/daily-premium.md`, `.autonomous/weekly-summary.md`, `.autonomous/state.json`
 
 ## What It Does
 
@@ -15,9 +15,11 @@ Every 30 minutes it:
 2. Applies global policy gating from `config.json`.
 3. Pulls market quotes from the configured provider (default: Databento) when API secret is allowlisted and present.
 4. Generates signal candidates based on move threshold.
-5. Builds a business update report.
-6. Sends channel updates to Discord and/or Telegram when corresponding secrets are allowlisted and present.
-7. Commits/pushes report updates when enabled.
+5. Applies risk filters (staleness, cooldown, max alerts, move cap, volume gate).
+6. Builds cycle + daily + weekly premium reports.
+7. Builds a business update report.
+8. Sends channel updates to Discord and/or Telegram when corresponding secrets are allowlisted and present.
+9. Commits/pushes report updates when enabled.
 
 ## Required GitHub Secrets For Full Live Mode (Default Databento)
 

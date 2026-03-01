@@ -14,12 +14,24 @@
       "IWM",
       "DIA"
     ],
-    "min_price_move_pct_alert": 0.5
+    "min_price_move_pct_alert": 0.5,
+    "risk_filters": {
+      "max_alerts_per_cycle": 2,
+      "max_abs_move_pct": 6,
+      "min_volume": 0,
+      "max_quote_age_minutes": 720,
+      "symbol_cooldown_minutes": 120,
+      "prefer_high_volume": true
+    }
   },
   "updates": {
     "send_on_no_change": false,
     "max_telegram_chars": 3500,
     "max_discord_chars": 1800
+  },
+  "premium_reports": {
+    "write_on_no_change": true,
+    "history_max_entries": 1000
   },
   "policy": {
     "allow_external_apis_with_secret_only": true,
